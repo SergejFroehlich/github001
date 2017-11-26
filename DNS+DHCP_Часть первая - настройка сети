@@ -1,0 +1,80 @@
+root@ubus003:~# ifconfig
+enp0s3    Link encap:Ethernet  Hardware Adresse 08:00:27:05:84:07
+          inet Adresse:192.168.1.223  Bcast:192.168.1.255  Maske:255.255.255.0
+          inet6-Adresse: fd24:fae0:5d70:0:a00:27ff:fe05:8407/64 Gültigkeitsbereich:Global
+          inet6-Adresse: fe80::a00:27ff:fe05:8407/64 Gültigkeitsbereich:Verbindung
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metrik:1
+          RX-Pakete:152 Fehler:0 Verloren:0 Überläufe:0 Fenster:0
+          TX-Pakete:83 Fehler:0 Verloren:0 Überläufe:0 Träger:0
+          Kollisionen:0 Sendewarteschlangenlänge:1000
+          RX-Bytes:19059 (19.0 KB)  TX-Bytes:11113 (11.1 KB)
+
+lo        Link encap:Lokale Schleife
+          inet Adresse:127.0.0.1  Maske:255.0.0.0
+          inet6-Adresse: ::1/128 Gültigkeitsbereich:Maschine
+          UP LOOPBACK RUNNING  MTU:65536  Metrik:1
+          RX-Pakete:160 Fehler:0 Verloren:0 Überläufe:0 Fenster:0
+          TX-Pakete:160 Fehler:0 Verloren:0 Überläufe:0 Träger:0
+          Kollisionen:0 Sendewarteschlangenlänge:1
+          RX-Bytes:11840 (11.8 KB)  TX-Bytes:11840 (11.8 KB)
+
+
+root@ubus003:~# vim /etc/network/interfaces
+root@ubus003:~# cat /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto enp0s3
+iface enp0s3 inet dhcp
+
+
+auto enp0s8
+iface enp0s8 inet static
+address 10.0.0.1
+netmask 255.255.255.0
+dns-nameservers 127.0.0.1
+dns-search LAB.LOCAL
+dns-domain LAB.LOCAL
+
+
+root@ubus003:~# service networking restart
+
+root@ubus003:~# ifconfig
+enp0s3    Link encap:Ethernet  Hardware Adresse 08:00:27:05:84:07
+          inet Adresse:192.168.1.223  Bcast:192.168.1.255  Maske:255.255.255.0
+          inet6-Adresse: fd24:fae0:5d70:0:a00:27ff:fe05:8407/64 Gültigkeitsbereich:Global
+          inet6-Adresse: fe80::a00:27ff:fe05:8407/64 Gültigkeitsbereich:Verbindung
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metrik:1
+          RX-Pakete:894 Fehler:0 Verloren:0 Überläufe:0 Fenster:0
+          TX-Pakete:457 Fehler:0 Verloren:0 Überläufe:0 Träger:0
+          Kollisionen:0 Sendewarteschlangenlänge:1000
+          RX-Bytes:89043 (89.0 KB)  TX-Bytes:63851 (63.8 KB)
+
+enp0s8    Link encap:Ethernet  Hardware Adresse 08:00:27:1f:e7:b6
+          inet Adresse:10.0.0.1  Bcast:10.0.0.255  Maske:255.255.255.0
+          inet6-Adresse: fe80::a00:27ff:fe1f:e7b6/64 Gültigkeitsbereich:Verbindung
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metrik:1
+          RX-Pakete:0 Fehler:0 Verloren:0 Überläufe:0 Fenster:0
+          TX-Pakete:8 Fehler:0 Verloren:0 Überläufe:0 Träger:0
+          Kollisionen:0 Sendewarteschlangenlänge:1000
+          RX-Bytes:0 (0.0 B)  TX-Bytes:648 (648.0 B)
+
+lo        Link encap:Lokale Schleife
+          inet Adresse:127.0.0.1  Maske:255.0.0.0
+          inet6-Adresse: ::1/128 Gültigkeitsbereich:Maschine
+          UP LOOPBACK RUNNING  MTU:65536  Metrik:1
+          RX-Pakete:160 Fehler:0 Verloren:0 Überläufe:0 Fenster:0
+          TX-Pakete:160 Fehler:0 Verloren:0 Überläufe:0 Träger:0
+          Kollisionen:0 Sendewarteschlangenlänge:1
+          RX-Bytes:11840 (11.8 KB)  TX-Bytes:11840 (11.8 KB)
+
+
+
+
