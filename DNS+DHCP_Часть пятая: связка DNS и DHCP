@@ -1,0 +1,355 @@
+root@ubus003:/# chown syslog:adm /var/log/dhcpd.log
+
+root@ubus003:/# stat /var/log/dhcpd.log
+  Datei: '/var/log/dhcpd.log'
+  Größe: 0              Blöcke: 0          EA Block: 4096   Normale leere Datei
+Gerät: 801h/2049d       Inode: 525134      Verknüpfungen: 1
+Zugriff: (0644/-rw-r--r--)  Uid: (  104/  syslog)   Gid: (    4/     adm)
+Zugriff    : 2017-11-26 20:43:00.282463781 +0100
+Modifiziert: 2017-11-26 20:18:46.160133196 +0100
+Geändert   : 2017-11-26 20:42:56.158556558 +0100
+ Geburt    : -
+
+
+ root@ubus003:/# service rsyslog restart
+
+
+
+
+
+
+
+
+ root@ubus003:/home# cd /root
+
+ root@ubus003:~# dnssec-keygen -a HMAC-MD5 -b 128 -r /dev/urandom -n USER DHCP_UPDATER
+Kdhcp_updater.+157+38215
+
+root@ubus003:~# ls
+Kdhcp_updater.+157+38215.key  Kdhcp_updater.+157+38215.private
+
+root@ubus003:~# cat Kdhcp_updater.+157+38215.private
+Private-key-format: v1.3
+Algorithm: 157 (HMAC_MD5)
+Key: 3Dq12F85blP8OOa4ho3Iig==
+Bits: AAA=
+Created: 20171126204421
+Publish: 20171126204421
+Activate: 20171126204421
+
+
+root@ubus003:~# vim /etc/bind/named.conf.local
+root@ubus003:~# cat /etc/bind/named.conf.local
+//
+// Do any local configuration here
+//
+key DHCP_UPDATER {
+        algorithm HMAC-MD5.SIG-ALG.REG.INT;
+        secret "3Dq12F85blP8OOa4ho3Iig==";
+
+
+};
+
+zone "lab.local" {
+        type master;
+        file "/var/lib/bind/forward.bindi";
+        allow-update { key DHCP_UPDATER; };
+        };
+
+
+zone "0.0.10.in-addr.arpa" {
+        type master;
+        file "/var/lib/bind/reverse.bind";
+        allow-update { key DHCP_UPDATER; };
+        };
+
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+
+
+root@ubus003:~# service bind9 restart
+
+
+
+root@ubus003:~# vim /etc/dhcp/dhcpd.conf
+root@ubus003:~# cat /etc/dhcp/dhcpd.conf
+#
+# Sample configuration file for ISC dhcpd for Debian
+#
+# Attention: If /etc/ltsp/dhcpd.conf exists, that will be used as
+# configuration file instead of this file.
+#
+#
+
+# The ddns-updates-style parameter controls whether or not the server will
+# attempt to do a DNS update when a lease is confirmed. We default to the
+# behavior of the version 2 packages ('none', since DHCP v2 didn't
+# have support for DDNS.)
+ddns-update on;
+ddns-update-style interim;
+update-static-leases on;
+authoritative;
+
+key DHCP_UPDATER {
+        algorithm HMAC-MD5;
+        secret "3Dq12F85blP8OOa4ho3Iig==";
+
+
+}
+
+zone lab.local {
+        primary 10.0.0.1;
+        key DHCP_UPDATER;
+        };
+
+
+zone "0.0.10.in-addr.arpa" {
+        primary 10.0.0.1;
+        key DHCP_UPDATER;
+        };
+
+subnet 10.0.0.0 netmask 255.255.255.0 {
+
+range 10.0.0.10 10.0.0.100;
+option domain-name "lab.local";
+option domain-name-servers 10.0.0.1;
+option routers 10.0.0.1;
+option broadcast-address 10.0.0.255;
+
+}
+
+#Host fileserver {
+
+#hardware ethernet macaddress
+#fixet-address 10.0.0.1 ....
+
+
+#}
+
+# option definitions common to all supported networks...
+#option domain-name "example.org";
+#option domain-name-servers ns1.example.org, ns2.example.org;
+
+default-lease-time 600;
+max-lease-time 7200;
+
+# If this DHCP server is the official DHCP server for the local
+# network, the authoritative directive should be uncommented.
+#authoritative;
+
+# Use this to send dhcp log messages to a different log file (you also
+# have to hack syslog.conf to complete the redirection).
+log-facility local7;
+
+# No service will be given on this subnet, but declaring it helps the
+# DHCP server to understand the network topology.
+
+#subnet 10.152.187.0 netmask 255.255.255.0 {
+#}
+
+# This is a very basic subnet declaration.
+
+#subnet 10.254.239.0 netmask 255.255.255.224 {
+#  range 10.254.239.10 10.254.239.20;
+#  option routers rtr-239-0-1.example.org, rtr-239-0-2.example.org;
+#}
+
+# This declaration allows BOOTP clients to get dynamic addresses,
+# which we don't really recommend.
+
+#subnet 10.254.239.32 netmask 255.255.255.224 {
+#  range dynamic-bootp 10.254.239.40 10.254.239.60;
+#  option broadcast-address 10.254.239.31;
+#  option routers rtr-239-32-1.example.org;
+#}
+
+# A slightly different configuration for an internal subnet.
+#subnet 10.5.5.0 netmask 255.255.255.224 {
+#  range 10.5.5.26 10.5.5.30;
+#  option domain-name-servers ns1.internal.example.org;
+#  option domain-name "internal.example.org";
+#  option subnet-mask 255.255.255.224;
+#  option routers 10.5.5.1;
+#  option broadcast-address 10.5.5.31;
+#  default-lease-time 600;
+#  max-lease-time 7200;
+#}
+
+# Hosts which require special configuration options can be listed in
+# host statements.   If no address is specified, the address will be
+# allocated dynamically (if possible), but the host-specific information
+# will still come from the host declaration.
+
+#host passacaglia {
+#  hardware ethernet 0:0:c0:5d:bd:95;
+#  filename "vmunix.passacaglia";
+#  server-name "toccata.fugue.com";
+#}
+
+# Fixed IP addresses can also be specified for hosts.   These addresses
+# should not also be listed as being available for dynamic assignment.
+# Hosts for which fixed IP addresses have been specified can boot using
+# BOOTP or DHCP.   Hosts for which no fixed address is specified can only
+# be booted with DHCP, unless there is an address range on the subnet
+# to which a BOOTP client is connected which has the dynamic-bootp flag
+# set.
+#host fantasia {
+#  hardware ethernet 08:00:07:26:c0:a5;
+#  fixed-address fantasia.fugue.com;
+#}
+
+# You can declare a class of clients and then do address allocation
+# based on that.   The example below shows a case where all clients
+# in a certain class get addresses on the 10.17.224/24 subnet, and all
+# other clients get addresses on the 10.0.29/24 subnet.
+
+#class "foo" {
+#  match if substring (option vendor-class-identifier, 0, 4) = "SUNW";
+#}
+
+#shared-network 224-29 {
+#  subnet 10.17.224.0 netmask 255.255.255.0 {
+#    option routers rtr-224.example.org;
+#  }
+#  subnet 10.0.29.0 netmask 255.255.255.0 {
+#    option routers rtr-29.example.org;
+#  }
+#  pool {
+#    allow members of "foo";
+#    range 10.17.224.10 10.17.224.250;
+#  }
+#  pool {
+#    deny members of "foo";
+#    range 10.0.29.10 10.0.29.230;
+#  }
+#}
+
+
+
+
+
+
+root@ubus003:~# service isc-dhcp-server restart
+root@ubus003:~# ls /var/lib/bind
+bind9-default.md5sum  forward.bind  reverse.bind
+
+
+root@ubus003:~# service bind9 status
+● bind9.service - BIND Domain Name Server
+   Loaded: loaded (/lib/systemd/system/bind9.service; enabled; vendor preset: enabled)
+  Drop-In: /run/systemd/generator/bind9.service.d
+           └─50-insserv.conf-$named.conf
+   Active: active (running) since So 2017-11-26 22:15:05 CET; 28min ago
+     Docs: man:named(8)
+  Process: 3657 ExecStop=/usr/sbin/rndc stop (code=exited, status=0/SUCCESS)
+ Main PID: 3665 (named)
+    Tasks: 4
+   Memory: 16.9M
+      CPU: 35.832s
+   CGroup: /system.slice/bind9.service
+           └─3665 /usr/sbin/named -f -u bind
+
+Nov 26 22:43:26 ubus003 named[3665]: no valid RRSIG resolving './NS/IN': 192.228.79.201#53
+Nov 26 22:43:26 ubus003 named[3665]: network unreachable resolving './NS/IN': 2001:500:84::b#53
+Nov 26 22:43:26 ubus003 named[3665]: validating org/DS: no valid signature found
+Nov 26 22:43:26 ubus003 named[3665]: no valid RRSIG resolving 'org/DS/IN': 192.33.4.12#53
+Nov 26 22:43:26 ubus003 named[3665]: validating org/DS: no valid signature found
+Nov 26 22:43:26 ubus003 named[3665]: no valid RRSIG resolving 'org/DS/IN': 192.36.148.17#53
+Nov 26 22:43:26 ubus003 named[3665]: network unreachable resolving 'org/DS/IN': 2001:7fe::53#53
+Nov 26 22:43:26 ubus003 named[3665]: validating org/DS: no valid signature found
+Nov 26 22:43:26 ubus003 named[3665]: no valid RRSIG resolving 'org/DS/IN': 199.7.83.42#53
+Nov 26 22:43:26 ubus003 named[3665]: network unreachable resolving 'org/DS/IN': 2001:500:2::c#53
+
+
+
+root@ubus003:~# service isc-dhcp-server status
+● isc-dhcp-server.service - ISC DHCP IPv4 server
+   Loaded: loaded (/lib/systemd/system/isc-dhcp-server.service; enabled; vendor preset: enabled)
+   Active: failed (Result: exit-code) since So 2017-11-26 22:41:48 CET; 2min 7s ago
+     Docs: man:dhcpd(8)
+  Process: 3720 ExecStart=/bin/sh -ec      CONFIG_FILE=/etc/dhcp/dhcpd.conf;      if [ -f /etc/ltsp/dhcpd.conf ]; then CONFIG_FILE=/etc/ltsp/d
+ Main PID: 3720 (code=exited, status=1/FAILURE)
+
+Nov 26 22:41:48 ubus003 sh[3720]: Configuration file errors encountered -- exiting
+Nov 26 22:41:48 ubus003 sh[3720]: If you think you have received this message due to a bug rather
+Nov 26 22:41:48 ubus003 sh[3720]: than a configuration issue please read the section on submitting
+Nov 26 22:41:48 ubus003 sh[3720]: bugs on either our web page at www.isc.org or in the README file
+Nov 26 22:41:48 ubus003 sh[3720]: before submitting a bug.  These pages explain the proper
+Nov 26 22:41:48 ubus003 sh[3720]: process and the information we find helpful for debugging..
+Nov 26 22:41:48 ubus003 sh[3720]: exiting.
+Nov 26 22:41:48 ubus003 systemd[1]: isc-dhcp-server.service: Main process exited, code=exited, status=1/FAILURE
+Nov 26 22:41:48 ubus003 systemd[1]: isc-dhcp-server.service: Unit entered failed state.
+Nov 26 22:41:48 ubus003 systemd[1]: isc-dhcp-server.service: Failed with result 'exit-code'.
+
+
+
+
+root@ubus003:~# tail -n 30 /var/log/syslog
+
+
+root@ubus003:~# service isc-dhcp-server status
+● isc-dhcp-server.service - ISC DHCP IPv4 server
+   Loaded: loaded (/lib/systemd/system/isc-dhcp-server.service; enabled; vendor preset: enabled)
+   Active: active (running) since So 2017-11-26 22:56:52 CET; 35s ago
+     Docs: man:dhcpd(8)
+ Main PID: 3834 (dhcpd)
+    Tasks: 1
+   Memory: 9.1M
+      CPU: 15ms
+   CGroup: /system.slice/isc-dhcp-server.service
+           └─3834 dhcpd -user dhcpd -group dhcpd -f -4 -pf /run/dhcp-server/dhcpd.pid -cf /etc/dhcp/dhcpd.conf enp0s3
+
+Nov 26 22:56:52 ubus003 dhcpd[3834]: For info, please visit https://www.isc.org/software/dhcp/
+Nov 26 22:56:52 ubus003 dhcpd[3834]: Wrote 1 leases to leases file.
+Nov 26 22:56:52 ubus003 sh[3834]: Wrote 1 leases to leases file.
+Nov 26 22:56:52 ubus003 dhcpd[3834]: Listening on LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 22:56:52 ubus003 sh[3834]: Listening on LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 22:56:52 ubus003 dhcpd[3834]: Sending on   LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 22:56:52 ubus003 sh[3834]: Sending on   LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 22:56:52 ubus003 dhcpd[3834]: Sending on   Socket/fallback/fallback-net
+Nov 26 22:56:52 ubus003 sh[3834]: Sending on   Socket/fallback/fallback-net
+Nov 26 22:56:52 ubus003 dhcpd[3834]: Server starting service.
+
+
+
+root@ubus003:~# cat /var/lib/dhcp/dhcpd.leases
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.3.3
+
+lease 10.0.0.10 {
+  starts 0 2017/11/26 22:08:55;
+  ends 0 2017/11/26 22:18:55;
+  tstp 0 2017/11/26 22:18:55;
+  cltt 0 2017/11/26 22:08:55;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet 08:00:27:f1:3f:3b;
+  client-hostname "debdesk001";
+}
+server-duid "\000\001\000\001!\255\365$\010\000'\005\204\007";
+
+lease 10.0.0.11 {
+  starts 0 2017/11/26 22:11:41;
+  ends 0 2017/11/26 22:21:41;
+  cltt 0 2017/11/26 22:11:41;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet 08:00:27:cd:0d:fb;
+  uid "\001\010\000'\315\015\373";
+  set vendor-class-identifier = "MSFT 5.0";
+  client-hostname "winxp";
+}
+
+
+root@ubus003:~# cat /var/log/dhcpd.log
+Nov 26 20:47:35 ubus003 dhcpd[3601]: DHCPREQUEST for 10.0.0.10 from 08:00:27:f1:3f:3b (debdesk001) via enp0s3
+Nov 26 20:47:35 ubus003 dhcpd[3601]: DHCPACK on 10.0.0.10 to 08:00:27:f1:3f:3b (debdesk001) via enp0s3
+Nov 26 20:52:20 ubus003 dhcpd[3601]: DHCPREQUEST for 10.0.0.10 from 08:00:27:f1:3f:3b (debdesk001) via enp0s3
+Nov 26 20:52:20 ubus003 dhcpd[3601]: DHCPACK on 10.0.0.10 to 08:00:27:f1:3f:3b (debdesk001) via enp0s3
+Nov 26 20:56:35 ubus003 dhcpd[3601]: DHCPREQUEST for 10.0.0.10 from 08:00:27:f1:3f:3b (debdesk001) via enp0s3
+Nov 26 20:56:35 ubus003 dhcpd[3601]: DHCPACK on 10.0.0.10 to 08:00:27:f1:3f:3b (debdesk001) via enp0s3

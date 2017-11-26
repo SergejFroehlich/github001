@@ -1,0 +1,330 @@
+root@ubus003:/etc/bind# apt-get install isc-dhcp-server
+
+
+root@ubus003:/etc/bind# vim /etc/dhcp/dhcpd.conf
+
+
+
+
+
+root@ubus003:/etc/bind# cat /etc/dhcp/dhcpd.conf
+#
+# Sample configuration file for ISC dhcpd for Debian
+#
+# Attention: If /etc/ltsp/dhcpd.conf exists, that will be used as
+# configuration file instead of this file.
+#
+#
+
+# The ddns-updates-style parameter controls whether or not the server will
+# attempt to do a DNS update when a lease is confirmed. We default to the
+# behavior of the version 2 packages ('none', since DHCP v2 didn't
+# have support for DDNS.)
+ddns-update-style none;
+authoritativ;
+
+subnet 10.0.0.0 netmask 255.255.255.0 {
+
+range 10.0.0.10 10.0.0.100;
+option domain-name "lab.local";
+option domain-name-servers 10.0.0.1;
+option routers 10.0.0.1;
+option broadcast-address 10.0.0.255;
+
+}
+
+#Host fileserver {
+
+#hardware ethernet macaddress
+#fixet-address 10.0.0.1 ....
+
+
+#}
+
+# option definitions common to all supported networks...
+#option domain-name "example.org";
+#option domain-name-servers ns1.example.org, ns2.example.org;
+
+default-lease-time 600;
+max-lease-time 7200;
+
+# If this DHCP server is the official DHCP server for the local
+# network, the authoritative directive should be uncommented.
+#authoritative;
+
+# Use this to send dhcp log messages to a different log file (you also
+# have to hack syslog.conf to complete the redirection).
+log-facility local7;
+
+# No service will be given on this subnet, but declaring it helps the
+# DHCP server to understand the network topology.
+
+#subnet 10.152.187.0 netmask 255.255.255.0 {
+#}
+
+# This is a very basic subnet declaration.
+
+#subnet 10.254.239.0 netmask 255.255.255.224 {
+#  range 10.254.239.10 10.254.239.20;
+#  option routers rtr-239-0-1.example.org, rtr-239-0-2.example.org;
+#}
+
+# This declaration allows BOOTP clients to get dynamic addresses,
+# which we don't really recommend.
+
+#subnet 10.254.239.32 netmask 255.255.255.224 {
+#  range dynamic-bootp 10.254.239.40 10.254.239.60;
+#  option broadcast-address 10.254.239.31;
+#  option routers rtr-239-32-1.example.org;
+#}
+
+# A slightly different configuration for an internal subnet.
+#subnet 10.5.5.0 netmask 255.255.255.224 {
+#  range 10.5.5.26 10.5.5.30;
+#  option domain-name-servers ns1.internal.example.org;
+#  option domain-name "internal.example.org";
+#  option subnet-mask 255.255.255.224;
+#  option routers 10.5.5.1;
+#  option broadcast-address 10.5.5.31;
+#  default-lease-time 600;
+#  max-lease-time 7200;
+#}
+
+# Hosts which require special configuration options can be listed in
+# host statements.   If no address is specified, the address will be
+# allocated dynamically (if possible), but the host-specific information
+# will still come from the host declaration.
+
+#host passacaglia {
+#  hardware ethernet 0:0:c0:5d:bd:95;
+#  filename "vmunix.passacaglia";
+#  server-name "toccata.fugue.com";
+#}
+
+# Fixed IP addresses can also be specified for hosts.   These addresses
+# should not also be listed as being available for dynamic assignment.
+# Hosts for which fixed IP addresses have been specified can boot using
+# BOOTP or DHCP.   Hosts for which no fixed address is specified can only
+# be booted with DHCP, unless there is an address range on the subnet
+# to which a BOOTP client is connected which has the dynamic-bootp flag
+# set.
+#host fantasia {
+#  hardware ethernet 08:00:07:26:c0:a5;
+#  fixed-address fantasia.fugue.com;
+#}
+
+# You can declare a class of clients and then do address allocation
+# based on that.   The example below shows a case where all clients
+# in a certain class get addresses on the 10.17.224/24 subnet, and all
+# other clients get addresses on the 10.0.29/24 subnet.
+
+#class "foo" {
+#  match if substring (option vendor-class-identifier, 0, 4) = "SUNW";
+#}
+
+#shared-network 224-29 {
+#  subnet 10.17.224.0 netmask 255.255.255.0 {
+#    option routers rtr-224.example.org;
+#  }
+#  subnet 10.0.29.0 netmask 255.255.255.0 {
+#    option routers rtr-29.example.org;
+#  }
+#  pool {
+#    allow members of "foo";
+#    range 10.17.224.10 10.17.224.250;
+#  }
+#  pool {
+#    deny members of "foo";
+#    range 10.0.29.10 10.0.29.230;
+#  }
+#}
+
+
+
+
+
+
+
+
+root@ubus003:/etc/bind# vim /etc/default/isc-dhcp-server
+root@ubus003:/etc/bind# cat /etc/default/isc-dhcp-server
+# Defaults for isc-dhcp-server initscript
+# sourced by /etc/init.d/isc-dhcp-server
+# installed at /etc/default/isc-dhcp-server by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# Path to dhcpd's config file (default: /etc/dhcp/dhcpd.conf).
+#DHCPD_CONF=/etc/dhcp/dhcpd.conf
+
+# Path to dhcpd's PID file (default: /var/run/dhcpd.pid).
+#DHCPD_PID=/var/run/dhcpd.pid
+
+# Additional options to start dhcpd with.
+#       Don't use options -cf or -pf here; use DHCPD_CONF/ DHCPD_PID instead
+#OPTIONS=""
+
+# On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
+#       Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+INTERFACES="enp0s3"
+
+
+
+
+
+
+
+
+
+
+
+root@ubus003:/etc/bind# vim /etc/rsyslog.conf
+root@ubus003:/etc/bind# cat /etc/rsyslog.conf
+#  /etc/rsyslog.conf    Configuration file for rsyslog.
+#
+#                       For more information see
+#                       /usr/share/doc/rsyslog-doc/html/rsyslog_conf.html
+#
+#  Default logging rules can be found in /etc/rsyslog.d/50-default.conf
+
+
+#################
+#### MODULES ####
+#################
+
+module(load="imuxsock") # provides support for local system logging
+module(load="imklog")   # provides kernel logging support
+#module(load="immark")  # provides --MARK-- message capability
+
+# provides UDP syslog reception
+#module(load="imudp")
+#input(type="imudp" port="514")
+
+# provides TCP syslog reception
+#module(load="imtcp")
+#input(type="imtcp" port="514")
+
+# Enable non-kernel facility klog messages
+$KLogPermitNonKernelFacility on
+
+###########################
+#### GLOBAL DIRECTIVES ####
+###########################
+
+#
+# Use traditional timestamp format.
+# To enable high precision timestamps, comment out the following line.
+#
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+# Filter duplicated messages
+$RepeatedMsgReduction on
+
+#
+# Set the default permissions for all log files.
+#
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+
+#
+# Where to place spool and state files
+#
+$WorkDirectory /var/spool/rsyslog
+
+#
+# Include all config files in /etc/rsyslog.d/
+#
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+
+local7.*                /var/log/dhcpd.log
+
+
+root@ubus003:/etc/bind# touch /var/log/dhcpd.log
+
+
+
+
+
+
+
+
+
+
+
+root@ubus003:/# service rsyslog restart
+root@ubus003:/# service rsyslog status
+● rsyslog.service - System Logging Service
+   Loaded: loaded (/lib/systemd/system/rsyslog.service; enabled; vendor preset: enabled)
+   Active: active (running) since So 2017-11-26 20:20:49 CET; 6s ago
+     Docs: man:rsyslogd(8)
+           http://www.rsyslog.com/doc/
+ Main PID: 3581 (rsyslogd)
+    Tasks: 4
+   Memory: 1.8M
+      CPU: 5ms
+   CGroup: /system.slice/rsyslog.service
+           └─3581 /usr/sbin/rsyslogd -n
+
+Nov 26 20:20:49 ubus003 systemd[1]: Starting System Logging Service...
+Nov 26 20:20:49 ubus003 systemd[1]: Started System Logging Service.
+
+
+
+root@ubus003:/# service isc-dhcp-server restart
+root@ubus003:/# service isc-dhcp-server status
+● isc-dhcp-server.service - ISC DHCP IPv4 server
+   Loaded: loaded (/lib/systemd/system/isc-dhcp-server.service; enabled; vendor preset: enabled)
+   Active: active (running) since So 2017-11-26 20:21:26 CET; 5s ago
+     Docs: man:dhcpd(8)
+ Main PID: 3601 (dhcpd)
+    Tasks: 1
+   Memory: 9.0M
+      CPU: 11ms
+   CGroup: /system.slice/isc-dhcp-server.service
+           └─3601 dhcpd -user dhcpd -group dhcpd -f -4 -pf /run/dhcp-server/dhcpd.pid -cf /etc/d
+
+Nov 26 20:21:26 ubus003 dhcpd[3601]: For info, please visit https://www.isc.org/software/dhcp/
+Nov 26 20:21:26 ubus003 dhcpd[3601]: Wrote 0 leases to leases file.
+Nov 26 20:21:26 ubus003 sh[3601]: Wrote 0 leases to leases file.
+Nov 26 20:21:26 ubus003 dhcpd[3601]: Listening on LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 20:21:26 ubus003 sh[3601]: Listening on LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 20:21:26 ubus003 dhcpd[3601]: Sending on   LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 20:21:26 ubus003 sh[3601]: Sending on   LPF/enp0s3/08:00:27:05:84:07/10.0.0.0/24
+Nov 26 20:21:26 ubus003 dhcpd[3601]: Sending on   Socket/fallback/fallback-net
+Nov 26 20:21:26 ubus003 sh[3601]: Sending on   Socket/fallback/fallback-net
+Nov 26 20:21:26 ubus003 dhcpd[3601]: Server starting service.
+
+
+
+
+
+
+
+
+
+root@ubus003:/# cat /var/lib/dhcp/dhcpd.leases
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.3.3
+
+server-duid "\000\001\000\001!\255\320\266\010\000'\005\204\007";
+
+lease 10.0.0.10 {
+  starts 0 2017/11/26 19:25:04;
+  ends 0 2017/11/26 19:35:04;
+  cltt 0 2017/11/26 19:25:04;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet 08:00:27:f1:3f:3b;
+  client-hostname "debdesk001";
+}
+
+
