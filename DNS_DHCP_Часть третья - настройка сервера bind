@@ -1,0 +1,81 @@
+
+
+root@ubus003:/etc/bind# ls
+bind.keys  db.127  db.empty  db.root     named.conf.default-zones  named.conf.options  zones.rfc1918
+db.0       db.255  db.local  named.conf  named.conf.local          rndc.key
+
+root@ubus003:/# cp db.local /var/lib/bind/forward.bind
+
+root@ubus003:/# vim /var/lib/bind/forward.bind
+root@ubus003:/# cat /var/lib/bind/forward.bind
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     ubus003.lan.local. root.ubus003.lan.local. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ubus003.lan.local.
+@       IN      A       10.0.0.1
+@       IN      AAAA    ::1
+
+ubus003 IN      A       10.0.0.1
+test    IN      A       10.0.0.111
+
+root@ubus003:/# cp /var/lib/bind/forward.bind /var/lib/bind/reverse.bind
+
+
+root@ubus003:/# vim /var/lib/bind/reverse.bind
+root@ubus003:/# cat /var/lib/bind/reverse.bind
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     ubus003.lan.local. root.ubus003.lan.local. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ubus003.lan.local.
+1       IN      PTR     ubus003.lab.local.
+111     IN      PTR     test.lab.local.
+
+
+root@ubus003:/# vim /etc/bind/named.conf.local
+root@ubus003:/# cat /etc/bind/named.conf.local
+//
+// Do any local configuration here
+//
+
+
+zone "lab.local" {
+        type master;
+        file "/var/lib/bind/forward.bind";
+        };
+
+
+zone "0.0.10.in-addr.arpa" {
+        type master;
+        file "/var/lib/bind/reverse.bind";
+        };
+
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+
+root@ubus003:/# service bind9 restart
+root@ubus003:/# service bind9 status
+
+
+
+
+
+
