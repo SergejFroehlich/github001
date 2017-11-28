@@ -88,7 +88,7 @@ root@ubus003:~# cat /etc/dhcp/dhcpd.conf
 # attempt to do a DNS update when a lease is confirmed. We default to the
 # behavior of the version 2 packages ('none', since DHCP v2 didn't
 # have support for DDNS.)
-ddns-update on;
+ddns-updates on;
 ddns-update-style interim;
 update-static-leases on;
 authoritative;
