@@ -1,0 +1,4 @@
+Sergejs-Mini:~ sergejfrohlich$ brew cask outdated
+virtualbox (5.2.0-118431) != 5.2.2-119230
+
+Sergejs-Mini:~ sergejfrohlich$ brew cask install --force virtualbox
